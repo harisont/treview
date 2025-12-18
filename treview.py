@@ -230,8 +230,7 @@ def conll2svg(intxt: str, color: str="white") -> Iterable[str]:
         try:
           svg = VisualStanza(stanza).to_svg(color=color)
           yield svg.as_svg()
-        except Exception as e:
-          yield e
+        except:
           yield "This tree cannot be visualized; check the format!"
         yield '</div>'
     yield '</body>\n</html>'
