@@ -225,11 +225,13 @@ def conll2svg(intxt: str) -> Iterable[str]:
   
     yield '<html>\n<body>\n'
     for stanza in stanzas:
+        yield '<div>'
         try:
           svg = VisualStanza(stanza).to_svg()
           yield svg.as_svg()
         except:
           yield "This tree cannot be visualized; check the format!"
+        yield '</div>'
     yield '</body>\n</html>'
 
 
