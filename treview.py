@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import argparse
 from argparse import ArgumentParser, ArgumentTypeError
 from itertools import chain, repeat, islice
 from dataclasses import dataclass
@@ -135,7 +136,7 @@ class VisualStanza:
     
     return depth(min(src,trg), max(src,trg)) + 1
   
-  def to_svg(self):
+  def to_svg(self, color="white"):
     """generate svg tree code"""
     tokens_w = sum([self.token_width(i) for i in range(len(self.tokens))])
     spaces_w = SPACE_LEN * (len(self.tokens) - 1)
@@ -149,14 +150,14 @@ class VisualStanza:
     
     # otherwise everything will be mirrored
     ycorrect = lambda y: (round(tot_h)) - round(y) - 5
-    svg = Drawing(tot_w,tot_h, origin=(0,0), style="background-color:white")
+    svg = Drawing(tot_w,tot_h, origin=(0,0))
     
     # draw tokens (forms + pos tags)
     for (i,token) in enumerate(self.tokens):
       x = self.token_xpos(i)
       y = tot_h - 5
-      svg.append(Text(token["form"], NORMAL_TEXT_SIZE, x=x, y=y))
-      svg.append(Text(token["pos"], TINY_TEXT_SIZE, x=x, y=tot_h-20))
+      svg.append(Text(token["form"], NORMAL_TEXT_SIZE, x=x, y=y, fill=color))
+      svg.append(Text(token["pos"], TINY_TEXT_SIZE, x=x, y=tot_h-20, fill=color))
 
     # draw deprels (arcs + labels)
     for ((src,trg),label) in self.deprels:
@@ -176,7 +177,7 @@ class VisualStanza:
       y2 = ycorrect(y + r)
 
       # draw arc
-      arc_path = Path(stroke='black', fill='none')
+      arc_path = Path(stroke=color, fill='none')
       arc_path.M(x1, y1).Q(x1, y2, x2, y2).L(x3,y2).Q(x4, y2, x4, y1)
       svg.append(arc_path)
 
@@ -187,13 +188,13 @@ class VisualStanza:
         x_arr, y_arr, 
         x_arr - 3, y_arr - 6, 
         x_arr + 3, y_arr - 6, 
-        stroke="black", fill="black", close="true")
+        stroke=color, fill=color, close="true")
       svg.append(arrow)
 
       # draw label
       x_lab = x - (len(label) * 4.5 / 2)
       y_lab = ycorrect((h / 2) + ARC_BASE_YPOS + 3)
-      svg.append(Text(label, TINY_TEXT_SIZE, x=x_lab, y=y_lab))
+      svg.append(Text(label, TINY_TEXT_SIZE, x=x_lab, y=y_lab, fill=color))
 
     # draw root arrow & text
     x_root_line = self.token_xpos(self.root) + 15
@@ -202,14 +203,14 @@ class VisualStanza:
     root_line = Line(
       x_root_line, y_root_line, 
       x_root_line, y_root_line + root_len, 
-      stroke="black")
+      stroke=color)
     svg.append(root_line)
     arrow_endpoint = y_root_line + root_len
     root_arrow = Lines(
       x_root_line, arrow_endpoint, 
       x_root_line - 3, arrow_endpoint - 6, 
       x_root_line + 3, arrow_endpoint - 6, 
-      stroke="black", fill="black", close="true")
+      stroke=color, fill=color, close="true")
     svg.append(root_arrow)
     svg.append(Text(
       "root", 
@@ -219,7 +220,7 @@ class VisualStanza:
     return svg
 
 
-def conll2svg(intxt: str) -> Iterable[str]:
+def conll2svg(intxt: str, color: str="white") -> Iterable[str]:
 
     stanzas = [span for span in intxt.split("\n\n") if span.strip()]
   
@@ -227,15 +228,20 @@ def conll2svg(intxt: str) -> Iterable[str]:
     for stanza in stanzas:
         yield '<div>'
         try:
-          svg = VisualStanza(stanza).to_svg()
+          svg = VisualStanza(stanza).to_svg(color=color)
           yield svg.as_svg()
-        except:
+        except Exception as e:
+          yield e
           yield "This tree cannot be visualized; check the format!"
         yield '</div>'
     yield '</body>\n</html>'
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="A CoNLL-U to HTML converter")
+    parser.add_argument('--color', '-c', help='HTML color code for stroke + fill', default="white")
+    args = parser.parse_args()
+
     intxt = sys.stdin.read()
-    for line in conll2svg(intxt):
+    for line in conll2svg(intxt, color=args.color):
         print(line)
