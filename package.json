@@ -4,7 +4,7 @@
   "description": "A Visual Studio Codium extension to preview dependency trees in CoNLL-U format.",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.107.0"
+    "vscode": "^1.106.0"
   },
   "categories": [
     "Other"
@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "treeview.helloWorld",
-        "title": "Hello World"
+        "command": "treeview.previewTree",
+        "title": "Preview Tree"
       }
     ]
   },
