@@ -41,11 +41,12 @@ You can now preview open CoNLL-U files by opening the command palette (Ctrl + Sh
 
 ## Optional parameters
 - `--color` or `-c` can be used to specify the HTML color code to be used for the stroke and fill of the output SVG. The default is `white`, as many programmers use dark themes
+- `--meta` or `m` can be followed by a space-separated list of metadata items to be displayed (if available). For example, `--meta sent_id text` makes the each sentence's ID and plain text visible above the corresponding tree
 
 ## Planned features
 - [ ] display lemmas and, optionally, all other remaining fields
 - [ ] incorporate validation log, at least level 1 for sentences too broken to be visualized
-- [ ] show sentence ID (and maybe optionally other metadata?)
+- [x] show sentence ID (and maybe optionally other metadata?)
 
 ## Known issues
 In VSCod*, treview currently only works for small files because the Document Preview extension has a hardcoded 500 ms time limit for the conversion to HTML. 

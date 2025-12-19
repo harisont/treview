@@ -8,6 +8,12 @@ from typing import Iterable
 from drawsvg import *
 
 @dataclass
+class MetaLine:
+    "Metadata lines (key-val pairs)"
+    key: str
+    val: str
+
+@dataclass
 class WordLine:
     "UD wordlines with 10 named fields"
     ID: str
@@ -50,6 +56,9 @@ def ifint(id: str) ->int:
 class NotValidWordLine(Exception):
     pass
 
+class NotValidMetaLine(Exception):
+    pass
+
 
 class NotValidTree(Exception):
     pass
@@ -63,15 +72,26 @@ def read_wordline(s: str) -> WordLine:
     else:
         raise NotValidWordLine
 
+def read_metaline(s: str) -> MetaLine:
+  if s.startswith("#") and "=" in s:
+      [key,val] = s[1:].split("=", maxsplit=1)
+      return MetaLine(key.strip(), val.strip())
+  else:
+      raise NotValidMetaLine
 
-def read_wordlines(lines):
-    "read a sequence of strings as WordLines, ignoring failed ones"
+
+def read_lines(lines):
+    "read a sequence of strings as WordLines or MetaLines, ignoring failed ones"
     for line in lines:
         try:
             word = read_wordline(line)
             yield word
-        except:
-            pass
+        except NotValidWordLine:
+            try:
+                meta = read_metaline(line)
+                yield meta
+            except NotValidMetaLine:
+                pass
 
 # default measures
 SPACE_LEN = 15
@@ -87,8 +107,16 @@ class VisualStanza:
   Haskell implementation. 
   NOTE: unlike token IDs, positions are counted from 0, hence the -1s"""
   def __init__(self,stanza):
-    wordlines = [wl for wl in read_wordlines(stanza.split("\n")) 
-                 if wl.ID.isdigit()] # ignore tokens whose ID is not an int
+    lines = read_lines(stanza.split("\n"))
+    wordlines = []
+    self.metadict = {}
+    for line in lines:
+      if type(line) == WordLine and line.ID.isdigit(): # ignore tokens whose ID is not an int
+        wordlines.append(line)
+      elif type(line) == MetaLine:
+        self.metadict[line.key] = line.val
+      else:
+        pass
 
     # token-wise info to be visualized (form + pos), cf. Dep's tokens
     self.tokens = [({"form": wl.FORM, "pos": wl.POS}) for wl in wordlines] 
@@ -220,15 +248,19 @@ class VisualStanza:
     return svg
 
 
-def conll2svg(intxt: str, color: str="white") -> Iterable[str]:
+def conll2svg(intxt: str, color: str="white", meta: list=[]) -> Iterable[str]:
 
     stanzas = [span for span in intxt.split("\n\n") if span.strip()]
   
     yield '<html>\n<body>\n'
     for stanza in stanzas:
+        vstanza = VisualStanza(stanza)
+        for item in meta:
+          if item in vstanza.metadict:
+            yield "<h4><b>{}</b>: {}</h4>".format(item, vstanza.metadict[item])
         yield '<div>'
         try:
-          svg = VisualStanza(stanza).to_svg(color=color)
+          svg = vstanza.to_svg(color=color)
           yield svg.as_svg()
         except:
           yield "This tree cannot be visualized; check the format!"
@@ -239,8 +271,9 @@ def conll2svg(intxt: str, color: str="white") -> Iterable[str]:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A CoNLL-U to HTML converter")
     parser.add_argument('--color', '-c', help='HTML color code for stroke + fill', default="white")
+    parser.add_argument('--meta', '-m', help='list of metadata items to be displayed, if available', nargs='+', default=[])
     args = parser.parse_args()
 
     intxt = sys.stdin.read()
-    for line in conll2svg(intxt, color=args.color):
+    for line in conll2svg(intxt, color=args.color, meta=args.meta):
         print(line)
