@@ -42,7 +42,7 @@ class WordLine:
         featvals = [fv.split('=') for fv in self.FEATS.split('|')]
         return {fv[0]: fv[1] for fv in featvals}
 
-WORDLINE_FIELDS = set('ID FORM LEMMA POS XPOS FEATS HEAD DEPREL DEPS MISC'.split())
+STD_FIELDS = set('ID FORM LEMMA POS XPOS FEATS HEAD DEPREL DEPS MISC'.split())
 
 ROOT_LABEL = 'root'
 
@@ -97,8 +97,8 @@ def read_lines(lines):
 SPACE_LEN = 15
 DEFAULT_WORD_LEN = 20
 CHAR_LEN = 1.8
-NORMAL_TEXT_SIZE = 16
-TINY_TEXT_SIZE = 10
+NORMAL_TXT_SIZE = 16
+TINY_TXT_SIZE = 10
 SCALE = 5
 ARC_BASE_YPOS = 30
 
@@ -111,7 +111,8 @@ class VisualStanza:
     wordlines = []
     self.metadict = {}
     for line in lines:
-      if type(line) == WordLine and line.ID.isdigit(): # ignore tokens whose ID is not an int
+      # and: ignore tokens whose ID is not an int. We don't like them
+      if type(line) == WordLine and line.ID.isdigit():
         wordlines.append(line)
       elif type(line) == MetaLine:
         self.metadict[line.key] = line.val
@@ -184,8 +185,8 @@ class VisualStanza:
     for (i,token) in enumerate(self.tokens):
       x = self.token_xpos(i)
       y = tot_h - 5
-      svg.append(Text(token["form"], NORMAL_TEXT_SIZE, x=x, y=y, fill=color))
-      svg.append(Text(token["pos"], TINY_TEXT_SIZE, x=x, y=tot_h-20, fill=color))
+      svg.append(Text(token["form"], NORMAL_TXT_SIZE, x=x, y=y, fill=color))
+      svg.append(Text(token["pos"], TINY_TXT_SIZE, x=x, y=tot_h-20, fill=color))
 
     # draw deprels (arcs + labels)
     for ((src,trg),label) in self.deprels:
@@ -222,7 +223,7 @@ class VisualStanza:
       # draw label
       x_lab = x - (len(label) * 4.5 / 2)
       y_lab = ycorrect((h / 2) + ARC_BASE_YPOS + 3)
-      svg.append(Text(label, TINY_TEXT_SIZE, x=x_lab, y=y_lab, fill=color))
+      svg.append(Text(label, TINY_TXT_SIZE, x=x_lab, y=y_lab, fill=color))
 
     # draw root arrow & text
     x_root_line = self.token_xpos(self.root) + 15
@@ -242,7 +243,7 @@ class VisualStanza:
     svg.append(root_arrow)
     svg.append(Text(
       "root", 
-      TINY_TEXT_SIZE, 
+      TINY_TXT_SIZE, 
       x=x_root_line + 5, y=ycorrect(tot_h - 15)))
 
     return svg
@@ -270,8 +271,18 @@ def conll2svg(intxt: str, color: str="white", meta: list=[]) -> Iterable[str]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A CoNLL-U to HTML converter")
-    parser.add_argument('--color', '-c', help='HTML color code for stroke + fill', default="white")
-    parser.add_argument('--meta', '-m', help='list of metadata items to be displayed, if available', nargs='+', default=[])
+    parser.add_argument(
+      '--color', '-c', 
+      help='HTML color code for stroke + fill', 
+      default="white"
+    )
+    parser.add_argument(
+      '--meta', 
+      '-m', 
+      help='list of metadata items to be displayed, if available', 
+      nargs='+', 
+      default=[]
+    )
     args = parser.parse_args()
 
     intxt = sys.stdin.read()
