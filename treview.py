@@ -303,8 +303,8 @@ def conll2svg(
         try:
           svg = vstanza.to_svg(color=color)
           yield svg.as_svg()
-        except Exception as e:
-          yield str(e) + "This tree cannot be visualized; check the format!"
+        except:
+          yield "This tree cannot be visualized; check the format!"
         yield '</div>'
     yield '</body>\n</html>'
 
