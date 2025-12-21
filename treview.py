@@ -29,30 +29,30 @@ class WordLine:
 
   def as_dict(self):
       return {
-        'ID': self.ID, 'FORM': self.FORM, 'LEMMA': self.LEMMA,
-        'UPOS': self.POS, 'XPOS': self.XPOS,
-        'FEATS': self.FEATS, 'HEAD': self.HEAD, 'DEPREL': self.DEPREL,
-        'DEPS': self.DEPS, 'MISC': self.MISC
+        "ID": self.ID, "FORM": self.FORM, "LEMMA": self.LEMMA,
+        "UPOS": self.POS, "XPOS": self.XPOS,
+        "FEATS": self.FEATS, "HEAD": self.HEAD, "DEPREL": self.DEPREL,
+        "DEPS": self.DEPS, "MISC": self.MISC
         }
     
   def __str__(self):
-    return '\t'.join(self.as_dict().values())
+    return "\t".join(self.as_dict().values())
 
   def feats(self) -> dict:
-    featvals = [fv.split('=') for fv in self.FEATS.split('|')]
+    featvals = [fv.split("=") for fv in self.FEATS.split("|")]
     return {fv[0]: fv[1] for fv in featvals}
 
-STD_FIELDS = set('ID FORM LEMMA UPOS XPOS FEATS HEAD DEPREL DEPS MISC'.split())
+STD_FIELDS = set("ID FORM LEMMA UPOS XPOS FEATS HEAD DEPREL DEPS MISC".split())
 DEFAULT_FIELDS = ["FORM", "UPOS", "HEAD", "DEPREL"]
 SUPPORTED_FIELDS = DEFAULT_FIELDS + ["ID", "LEMMA", "XPOS"]
 
-ROOT_LABEL = 'root'
+ROOT_LABEL = "root"
 
 def ifint(id: str) ->int:
   if id.isdigit():
       return int(id)
   else:
-      return int(float(id))  # for ids like '7.1'
+      return int(float(id))  # for ids like "7.1"
 
     
 class NotValidWordLine(Exception):
@@ -68,7 +68,7 @@ class NotValidTree(Exception):
 
 def read_wordline(s: str) -> WordLine:
   "read a string as a WordLine, fail if not valid"
-  fields = s.strip().split('\t')
+  fields = s.strip().split("\t")
   if len(fields) == 10 and fields[0][0].isdigit():
     return WordLine(*fields)
   else:
@@ -115,7 +115,7 @@ class VisualStanza:
     wordlines = []
     self.metadict = {}
     for line in lines:
-      # and: ignore tokens whose ID is not an int. We don't like them
+      # and: ignore tokens whose ID is not an int. We don"t like them
       if type(line) == WordLine and line.ID.isdigit():
         wordlines.append(line)
       elif type(line) == MetaLine:
@@ -132,17 +132,17 @@ class VisualStanza:
       "XPOS": wl.XPOS
       }) for wl in wordlines] 
       
-    # list of dependency relations: [((from,to), label)], cf. Dep's deps
+    # list of dependency relations: [((from,to), label)], cf. Dep"s deps
     self.deprels = [
       ((int(wl.ID) - 1, int(wl.HEAD) - 1), wl.DEPREL) for wl in wordlines
       if int(wl.HEAD)] # 
 
-    # root position, cf. Dep's root
+    # root position, cf. Dep"s root
     self.root = int([wl.ID for wl in wordlines if wl.HEAD == "0"][0]) - 1
   
   def token_width(self, i):
     """total i-th token width (including space) in the output SVG"""
-    abs_token_len = CHAR_LEN * max( # cf. Dep's wordLength
+    abs_token_len = CHAR_LEN * max( # cf. Dep"s wordLength
       0, 
       len(self.tokens[i]["FORM"]), 
       len(self.tokens[i]["LEMMA"]), 
@@ -161,7 +161,7 @@ class VisualStanza:
   
   def arcs(self):
     """helper method to extract bare arcs (pairs of positions) form deprels
-    NOTE: arcs are extracted ltr, but I don't know if this is really needed"""
+    NOTE: arcs are extracted ltr, but I don"t know if this is really needed"""
     return [(min(src, trg), max(src, trg)) for ((src, trg),_) in self.deprels]
 
   def arc_height(self, src, trg):
@@ -210,12 +210,12 @@ class VisualStanza:
         svg.append(
           Text(token["LEMMA"], 
           SMALL_TXT_SIZE, 
-          x=x, y=tot_h-13, fill=color, font_style='italic'))
+          x=x, y=tot_h-13, fill=color, font_style="italic"))
       if "ID" in self.fields:
         svg.append(
           Text(token["ID"], 
           SMALL_TXT_SIZE, 
-          x=x, y=tot_h, fill=color, font_weight='bold'))
+          x=x, y=tot_h, fill=color, font_weight="bold"))
 
     # draw deprels (arcs + labels)
     for ((src,trg),label) in self.deprels:   
@@ -234,7 +234,7 @@ class VisualStanza:
       y2 = ycorrect(y + r)
 
       # draw arc
-      arc_path = Path(stroke=color, fill='none')
+      arc_path = Path(stroke=color, fill="none")
       arc_path.M(x1, y1).Q(x1, y2, x2, y2).L(x3,y2).Q(x4, y2, x4, y1)
       if "HEAD" in self.fields:
         svg.append(arc_path)
@@ -291,20 +291,20 @@ def conll2svg(
 
   stanzas = [span for span in intxt.split("\n\n") if span.strip()]
   
-  yield '<html>\n<body>\n'
+  yield "<html>\n<body>\n"
   for stanza in stanzas:
     vstanza = VisualStanza(stanza, fields=fields)
     for item in meta:
       if item in vstanza.metadict:
         yield "<h4><b>{}</b>: {}</h4>".format(item, vstanza.metadict[item])
-    yield '<div>'
+    yield "<div>"
     try:
       svg = vstanza.to_svg(color=color)
       yield svg.as_svg()
     except:
       yield "This tree cannot be visualized; check the format!"
-    yield '</div>'
-  yield '</body>\n</html>'
+    yield "</div>"
+  yield "</body>\n</html>"
 
 
 if __name__ == "__main__":
@@ -316,14 +316,14 @@ if __name__ == "__main__":
     default=DEFAULT_FIELDS
   )
   parser.add_argument(
-    '--meta', '-m', 
-    help='list of metadata items to be displayed, if available', 
-    nargs='+', 
+    "--meta", "-m", 
+    help="list of metadata items to be displayed, if available", 
+    nargs="+", 
     default=[]
   )
   parser.add_argument(
-    '--color', '-c', 
-    help='HTML color code for stroke + fill', 
+    "--color", "-c", 
+    help="HTML color code for stroke + fill", 
     default="white"
   )
   args = parser.parse_args()
