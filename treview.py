@@ -9,38 +9,38 @@ from drawsvg import *
 
 @dataclass
 class MetaLine:
-    "Metadata lines (key-val pairs)"
-    key: str
-    val: str
+  "Metadata lines (key-val pairs)"
+  key: str
+  val: str
 
 @dataclass
 class WordLine:
-    "UD wordlines with 10 named fields"
-    ID: str
-    FORM: str
-    LEMMA: str
-    UPOS: str
-    XPOS: str
-    FEATS: str
-    HEAD: str
-    DEPREL: str
-    DEPS: str
-    MISC: str
+  "UD wordlines with 10 named fields"
+  ID: str
+  FORM: str
+  LEMMA: str
+  UPOS: str
+  XPOS: str
+  FEATS: str
+  HEAD: str
+  DEPREL: str
+  DEPS: str
+  MISC: str
 
-    def as_dict(self):
-        return {
-          'ID': self.ID, 'FORM': self.FORM, 'LEMMA': self.LEMMA,
-          'UPOS': self.POS, 'XPOS': self.XPOS,
-          'FEATS': self.FEATS, 'HEAD': self.HEAD, 'DEPREL': self.DEPREL,
-          'DEPS': self.DEPS, 'MISC': self.MISC
-          }
+  def as_dict(self):
+      return {
+        'ID': self.ID, 'FORM': self.FORM, 'LEMMA': self.LEMMA,
+        'UPOS': self.POS, 'XPOS': self.XPOS,
+        'FEATS': self.FEATS, 'HEAD': self.HEAD, 'DEPREL': self.DEPREL,
+        'DEPS': self.DEPS, 'MISC': self.MISC
+        }
     
-    def __str__(self):
-        return '\t'.join(self.as_dict().values())
+  def __str__(self):
+    return '\t'.join(self.as_dict().values())
 
-    def feats(self) -> dict:
-        featvals = [fv.split('=') for fv in self.FEATS.split('|')]
-        return {fv[0]: fv[1] for fv in featvals}
+  def feats(self) -> dict:
+    featvals = [fv.split('=') for fv in self.FEATS.split('|')]
+    return {fv[0]: fv[1] for fv in featvals}
 
 STD_FIELDS = set('ID FORM LEMMA UPOS XPOS FEATS HEAD DEPREL DEPS MISC'.split())
 DEFAULT_FIELDS = ["FORM", "UPOS", "HEAD", "DEPREL"]
@@ -49,51 +49,51 @@ SUPPORTED_FIELDS = DEFAULT_FIELDS + ["ID", "LEMMA", "XPOS"]
 ROOT_LABEL = 'root'
 
 def ifint(id: str) ->int:
-    if id.isdigit():
-        return int(id)
-    else:
-        return int(float(id))  # for ids like '7.1'
+  if id.isdigit():
+      return int(id)
+  else:
+      return int(float(id))  # for ids like '7.1'
 
     
 class NotValidWordLine(Exception):
-    pass
+  pass
 
 class NotValidMetaLine(Exception):
-    pass
+  pass
 
 
 class NotValidTree(Exception):
-    pass
+  pass
 
 
 def read_wordline(s: str) -> WordLine:
-    "read a string as a WordLine, fail if not valid"
-    fields = s.strip().split('\t')
-    if len(fields) == 10 and fields[0][0].isdigit():
-        return WordLine(*fields)
-    else:
-        raise NotValidWordLine
+  "read a string as a WordLine, fail if not valid"
+  fields = s.strip().split('\t')
+  if len(fields) == 10 and fields[0][0].isdigit():
+    return WordLine(*fields)
+  else:
+    raise NotValidWordLine
 
 def read_metaline(s: str) -> MetaLine:
   if s.startswith("#") and "=" in s:
-      [key,val] = s[1:].split("=", maxsplit=1)
-      return MetaLine(key.strip(), val.strip())
+    [key,val] = s[1:].split("=", maxsplit=1)
+    return MetaLine(key.strip(), val.strip())
   else:
-      raise NotValidMetaLine
+    raise NotValidMetaLine
 
 
 def read_lines(lines):
-    "read a sequence of strings as WordLines or MetaLines, ignoring failed ones"
-    for line in lines:
-        try:
-            word = read_wordline(line)
-            yield word
-        except NotValidWordLine:
-            try:
-                meta = read_metaline(line)
-                yield meta
-            except NotValidMetaLine:
-                pass
+  "read a sequence of strings as WordLines or MetaLines, ignoring failed ones"
+  for line in lines:
+    try:
+      word = read_wordline(line)
+      yield word
+    except NotValidWordLine:
+      try:
+        meta = read_metaline(line)
+        yield meta
+      except NotValidMetaLine:
+        pass
 
 # default measures
 SPACE_LEN = 15
@@ -217,10 +217,8 @@ class VisualStanza:
           SMALL_TXT_SIZE, 
           x=x, y=tot_h, fill=color, font_weight='bold'))
 
-
     # draw deprels (arcs + labels)
-    for ((src,trg),label) in self.deprels:
-      
+    for ((src,trg),label) in self.deprels:   
       dxy = self.token_dist(src, trg)
       ndxy = 100 * 0.5 * self.arc_height(src,trg)
       w = dxy - (600 * 0.5) / dxy
@@ -291,65 +289,65 @@ def conll2svg(
   fields: list=DEFAULT_FIELDS
 ) -> Iterable[str]:
 
-    stanzas = [span for span in intxt.split("\n\n") if span.strip()]
+  stanzas = [span for span in intxt.split("\n\n") if span.strip()]
   
-    yield '<html>\n<body>\n'
-    for stanza in stanzas:
-        vstanza = VisualStanza(stanza, fields=fields)
-        for item in meta:
-          if item in vstanza.metadict:
-            yield "<h4><b>{}</b>: {}</h4>".format(item, vstanza.metadict[item])
-        yield '<div>'
-        try:
-          svg = vstanza.to_svg(color=color)
-          yield svg.as_svg()
-        except:
-          yield "This tree cannot be visualized; check the format!"
-        yield '</div>'
-    yield '</body>\n</html>'
+  yield '<html>\n<body>\n'
+  for stanza in stanzas:
+    vstanza = VisualStanza(stanza, fields=fields)
+    for item in meta:
+      if item in vstanza.metadict:
+        yield "<h4><b>{}</b>: {}</h4>".format(item, vstanza.metadict[item])
+    yield '<div>'
+    try:
+      svg = vstanza.to_svg(color=color)
+      yield svg.as_svg()
+    except:
+      yield "This tree cannot be visualized; check the format!"
+    yield '</div>'
+  yield '</body>\n</html>'
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="A CoNLL-U to HTML converter")
-    parser.add_argument(
-      "--fields", "-f",
-      help="list of CoNLL-U fields to be displayed",
-      nargs="+",
-      default=DEFAULT_FIELDS
-    )
-    parser.add_argument(
-      '--meta', '-m', 
-      help='list of metadata items to be displayed, if available', 
-      nargs='+', 
-      default=[]
-    )
-    parser.add_argument(
-      '--color', '-c', 
-      help='HTML color code for stroke + fill', 
-      default="white"
-    )
-    args = parser.parse_args()
+  parser = argparse.ArgumentParser(description="A CoNLL-U to HTML converter")
+  parser.add_argument(
+    "--fields", "-f",
+    help="list of CoNLL-U fields to be displayed",
+    nargs="+",
+    default=DEFAULT_FIELDS
+  )
+  parser.add_argument(
+    '--meta', '-m', 
+    help='list of metadata items to be displayed, if available', 
+    nargs='+', 
+    default=[]
+  )
+  parser.add_argument(
+    '--color', '-c', 
+    help='HTML color code for stroke + fill', 
+    default="white"
+  )
+  args = parser.parse_args()
 
-    intxt = sys.stdin.read()
+  intxt = sys.stdin.read()
 
-    fields = []
-    for field in args.fields:
-      field = field.upper()
-      if field in STD_FIELDS:
-        if field in SUPPORTED_FIELDS:
-          fields.append(field)
-        else:
-          sys.stderr.write("Ignoring {} (field not supported)\n".format(
-          field
-          ))
+  fields = []
+  for field in args.fields:
+    field = field.upper()
+    if field in STD_FIELDS:
+      if field in SUPPORTED_FIELDS:
+        fields.append(field)
       else:
-        sys.stderr.write("Ignoring {} (not a standard CoNLL-U field)\n".format(
-          field
+        sys.stderr.write("Ignoring {} (field not supported)\n".format(
+        field
         ))
+    else:
+      sys.stderr.write("Ignoring {} (not a standard CoNLL-U field)\n".format(
+        field
+      ))
 
-    for line in conll2svg(
-                  intxt, 
-                  color=args.color, 
-                  meta=args.meta,
-                  fields=fields):
-        print(line)
+  for line in conll2svg(
+                intxt, 
+                color=args.color, 
+                meta=args.meta,
+                fields=fields):
+    print(line)
