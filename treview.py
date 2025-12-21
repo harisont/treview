@@ -115,7 +115,7 @@ class VisualStanza:
     wordlines = []
     self.metadict = {}
     for line in lines:
-      # and: ignore tokens whose ID is not an int. We don"t like them
+      # and: ignore tokens whose ID is not an int. We don't like them
       if type(line) == WordLine and line.ID.isdigit():
         wordlines.append(line)
       elif type(line) == MetaLine:
@@ -132,17 +132,17 @@ class VisualStanza:
       "XPOS": wl.XPOS
       }) for wl in wordlines] 
       
-    # list of dependency relations: [((from,to), label)], cf. Dep"s deps
+    # list of dependency relations: [((from,to), label)], cf. Dep's deps
     self.deprels = [
       ((int(wl.ID) - 1, int(wl.HEAD) - 1), wl.DEPREL) for wl in wordlines
       if int(wl.HEAD)] # 
 
-    # root position, cf. Dep"s root
+    # root position, cf. Dep's root
     self.root = int([wl.ID for wl in wordlines if wl.HEAD == "0"][0]) - 1
   
   def token_width(self, i):
     """total i-th token width (including space) in the output SVG"""
-    abs_token_len = CHAR_LEN * max( # cf. Dep"s wordLength
+    abs_token_len = CHAR_LEN * max( # cf. Dep's wordLength
       0, 
       len(self.tokens[i]["FORM"]), 
       len(self.tokens[i]["LEMMA"]), 
@@ -161,7 +161,7 @@ class VisualStanza:
   
   def arcs(self):
     """helper method to extract bare arcs (pairs of positions) form deprels
-    NOTE: arcs are extracted ltr, but I don"t know if this is really needed"""
+    NOTE: arcs are extracted ltr, but I don't know if this is really needed"""
     return [(min(src, trg), max(src, trg)) for ((src, trg),_) in self.deprels]
 
   def arc_height(self, src, trg):
