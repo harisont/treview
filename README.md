@@ -41,7 +41,7 @@ You can now preview open CoNLL-U files by opening the command palette (Ctrl + Sh
 
 ## Optional parameters
 - `--color` or `-c` can be used to specify the HTML color code to be used for the stroke and fill of the output SVG. The default is `white`, as many programmers use dark themes
-- `--meta` or `m` can be followed by a space-separated list of metadata items to be displayed (if available). For example, `--meta sent_id text` makes the each sentence's ID and plain text visible above the corresponding tree
+- `--meta` or `m` can be followed by a space-separated list of metadata items to be displayed (if available). For example, `--meta sent_id text` makes the each sentence's ID and plain text visible above the corresponding tree. By default, no metadata is shown
 
 ## Planned features
 - [ ] display lemmas and, optionally, all other remaining fields (inlcuding ID, the most important to edit dependencies manually!)
