@@ -44,7 +44,7 @@ class WordLine:
 
 STD_FIELDS = set('ID FORM LEMMA UPOS XPOS FEATS HEAD DEPREL DEPS MISC'.split())
 DEFAULT_FIELDS = ["FORM", "UPOS", "HEAD", "DEPREL"]
-SUPPORTED_FIELDS = DEFAULT_FIELDS + ["ID", "LEMMA"]
+SUPPORTED_FIELDS = DEFAULT_FIELDS + ["ID", "LEMMA", "XPOS"]
 
 ROOT_LABEL = 'root'
 
@@ -109,7 +109,8 @@ class VisualStanza:
   """class to visualize a CoNNL-U stanza; partly corresponding to Dep in the
   Haskell implementation. 
   NOTE: unlike token IDs, positions are counted from 0, hence the -1s"""
-  def __init__(self,stanza):
+  def __init__(self, stanza, fields=DEFAULT_FIELDS):
+    self.fields = fields
     lines = read_lines(stanza.split("\n"))
     wordlines = []
     self.metadict = {}
@@ -127,7 +128,8 @@ class VisualStanza:
       "ID": wl.ID,
       "FORM": wl.FORM,
       "LEMMA": wl.LEMMA,
-      "UPOS": wl.UPOS
+      "UPOS": wl.UPOS, 
+      "XPOS": wl.XPOS
       }) for wl in wordlines] 
       
     # list of dependency relations: [((from,to), label)], cf. Dep's deps
@@ -143,7 +145,9 @@ class VisualStanza:
     abs_token_len = CHAR_LEN * max( # cf. Dep's wordLength
       0, 
       len(self.tokens[i]["FORM"]), 
-      len(self.tokens[i]["UPOS"]))
+      len(self.tokens[i]["LEMMA"]), 
+      len(self.tokens[i]["UPOS"]) + 
+      ((len(self.tokens[i]["XPOS"]) + 3) if "XPOS" in self.fields else 0))
     rel_token_len = abs_token_len / DEFAULT_WORD_LEN # cf. rwdl
     return 100 * rel_token_len + SPACE_LEN
 
@@ -173,7 +177,7 @@ class VisualStanza:
     
     return depth(min(src,trg), max(src,trg)) + 1
   
-  def to_svg(self, color="white", fields=DEFAULT_FIELDS):
+  def to_svg(self, color="white"):
     """generate svg tree code"""
     tokens_w = sum([self.token_width(i) for i in range(len(self.tokens))])
     spaces_w = SPACE_LEN * (len(self.tokens) - 1)
@@ -190,18 +194,24 @@ class VisualStanza:
     # draw tokens (forms + pos tags)
     for (i,token) in enumerate(self.tokens):
       x = self.token_xpos(i)
-      if "FORM" in fields:
+      pos = " - ".join(
+        [pos for pos in [
+          token["UPOS"] if "UPOS" in self.fields else None, 
+          token["XPOS"] if "XPOS" in self.fields else None] 
+        if pos]
+      )
+      if "UPOS" in self.fields or "XPOS" in self.fields:
+        svg.append(
+          Text(pos, TINY_TXT_SIZE, x=x, y=tot_h-40, fill=color))
+      if "FORM" in self.fields:
         svg.append(
           Text(token["FORM"], NORMAL_TXT_SIZE, x=x, y=tot_h-25, fill=color))
-      if "UPOS" in fields:
-        svg.append(
-          Text(token["UPOS"], TINY_TXT_SIZE, x=x, y=tot_h-40, fill=color))
-      if "LEMMA" in fields:
+      if "LEMMA" in self.fields:
         svg.append(
           Text(token["LEMMA"], 
           SMALL_TXT_SIZE, 
           x=x, y=tot_h-13, fill=color, font_style='italic'))
-      if "ID" in fields:
+      if "ID" in self.fields:
         svg.append(
           Text(token["ID"], 
           SMALL_TXT_SIZE, 
@@ -228,7 +238,7 @@ class VisualStanza:
       # draw arc
       arc_path = Path(stroke=color, fill='none')
       arc_path.M(x1, y1).Q(x1, y2, x2, y2).L(x3,y2).Q(x4, y2, x4, y1)
-      if "HEAD" in fields:
+      if "HEAD" in self.fields:
         svg.append(arc_path)
 
       # draw arrow
@@ -239,13 +249,13 @@ class VisualStanza:
         x_arr - 3, y_arr - 6, 
         x_arr + 3, y_arr - 6, 
         stroke=color, fill=color, close="true")
-      if "HEAD" in fields:
+      if "HEAD" in self.fields:
         svg.append(arrow)
 
       # draw label
       x_lab = x - (len(label) * 4.5 / 2)
       y_lab = ycorrect((h / 2) + ARC_BASE_YPOS + 3)
-      if "DEPREL" in fields:
+      if "DEPREL" in self.fields:
         svg.append(Text(label, TINY_TXT_SIZE, x=x_lab, y=y_lab, fill=color))
 
     # draw root arrow & text
@@ -265,7 +275,7 @@ class VisualStanza:
         x_root_line + 3, arrow_endpoint - 6, 
         stroke=color, fill=color, close="true")
       svg.append(root_arrow)
-    if "DEPREL" in fields:
+    if "DEPREL" in self.fields:
       svg.append(Text(
         "root", 
         TINY_TXT_SIZE, 
@@ -285,16 +295,16 @@ def conll2svg(
   
     yield '<html>\n<body>\n'
     for stanza in stanzas:
-        vstanza = VisualStanza(stanza)
+        vstanza = VisualStanza(stanza, fields=fields)
         for item in meta:
           if item in vstanza.metadict:
             yield "<h4><b>{}</b>: {}</h4>".format(item, vstanza.metadict[item])
         yield '<div>'
         try:
-          svg = vstanza.to_svg(color=color, fields=fields)
+          svg = vstanza.to_svg(color=color)
           yield svg.as_svg()
-        except:
-          yield "This tree cannot be visualized; check the format!"
+        except Exception as e:
+          yield str(e) + "This tree cannot be visualized; check the format!"
         yield '</div>'
     yield '</body>\n</html>'
 

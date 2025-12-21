@@ -40,7 +40,7 @@ You can now preview open CoNLL-U files by opening the command palette (Ctrl + Sh
 
 
 ## Optional parameters
-- `--fields` or `f` can be followed by a space-separated list of CoNLL-U fields to be displayed. By default, treview displays FORM, UPOS and dependencies (HEAD + DEPREL). Note that not all fields are currently supported
+- `--fields` or `f` can be followed by a space-separated list of CoNLL-U fields to be displayed. By default, treview displays FORM, UPOS and dependencies (HEAD + DEPREL). Supported fields: ID, FORM, LEMMA, UPOS, XPOS, HEAD (dependency edges) and DEPRELs
 - `--meta` or `m` can be followed by a space-separated list of metadata items to be displayed (if available). By default, no metadata is shown
 - `--color` or `-c` can be used to specify the HTML color code to be used for the stroke and fill of the output SVG. The default is `white`, as many programmers use dark themes
 
@@ -51,7 +51,7 @@ treview --meta sent_id --fields id form lemma upos head deprel
 ```
 
 ## Planned features
-- [ ] display lemmas and, optionally, (all) other remaining fields (WIP, see above)
+- [x] display lemmas and, optionally, (all) other remaining fields (__NOTE__: at least for the moment, I decided not to implement visualizations for FEATS, MISC and DEPREL; see above)
 - [ ] incorporate validation log, at least level 1 for sentences too broken to be visualized
 - [x] show sentence ID (and maybe optionally other metadata?)
 - [ ] diff with another file (assumed to be with the same data but possibly different annotations)
