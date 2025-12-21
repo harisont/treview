@@ -47,6 +47,7 @@ You can now preview open CoNLL-U files by opening the command palette (Ctrl + Sh
 - [ ] display lemmas and, optionally, all other remaining fields (inlcuding ID, the most important to edit dependencies manually!)
 - [ ] incorporate validation log, at least level 1 for sentences too broken to be visualized
 - [x] show sentence ID (and maybe optionally other metadata?)
+- [ ] diff with another file (assumed to be with the same data but possibly different annotations)
 
 ## Known issues
 In VSCod*, treview currently only works for small files because the Document Preview extension has a hardcoded 500 ms time limit for the conversion to HTML. 
