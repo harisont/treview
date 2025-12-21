@@ -30,7 +30,7 @@ class WordLine:
     def as_dict(self):
         return {
           'ID': self.ID, 'FORM': self.FORM, 'LEMMA': self.LEMMA,
-          'POS': self.POS, 'XPOS': self.XPOS,
+          'UPOS': self.POS, 'XPOS': self.XPOS,
           'FEATS': self.FEATS, 'HEAD': self.HEAD, 'DEPREL': self.DEPREL,
           'DEPS': self.DEPS, 'MISC': self.MISC
           }
@@ -42,7 +42,9 @@ class WordLine:
         featvals = [fv.split('=') for fv in self.FEATS.split('|')]
         return {fv[0]: fv[1] for fv in featvals}
 
-STD_FIELDS = set('ID FORM LEMMA POS XPOS FEATS HEAD DEPREL DEPS MISC'.split())
+STD_FIELDS = set('ID FORM LEMMA UPOS XPOS FEATS HEAD DEPREL DEPS MISC'.split())
+DEFAULT_FIELDS = ["FORM", "UPOS", "HEAD", "DEPREL"]
+SUPPORTED_FIELDS = DEFAULT_FIELDS + []
 
 ROOT_LABEL = 'root'
 
@@ -120,7 +122,7 @@ class VisualStanza:
         pass
 
     # token-wise info to be visualized (form + pos), cf. Dep's tokens
-    self.tokens = [({"form": wl.FORM, "pos": wl.POS}) for wl in wordlines] 
+    self.tokens = [({"FORM": wl.FORM, "UPOS": wl.POS}) for wl in wordlines] 
       
     # list of dependency relations: [((from,to), label)], cf. Dep's deps
     self.deprels = [
@@ -134,8 +136,8 @@ class VisualStanza:
     """total i-th token width (including space) in the output SVG"""
     abs_token_len = CHAR_LEN * max( # cf. Dep's wordLength
       0, 
-      len(self.tokens[i]["form"]), 
-      len(self.tokens[i]["pos"]))
+      len(self.tokens[i]["FORM"]), 
+      len(self.tokens[i]["UPOS"]))
     rel_token_len = abs_token_len / DEFAULT_WORD_LEN # cf. rwdl
     return 100 * rel_token_len + SPACE_LEN
 
@@ -165,12 +167,10 @@ class VisualStanza:
     
     return depth(min(src,trg), max(src,trg)) + 1
   
-  def to_svg(self, color="white"):
+  def to_svg(self, color="white", fields=DEFAULT_FIELDS):
     """generate svg tree code"""
     tokens_w = sum([self.token_width(i) for i in range(len(self.tokens))])
     spaces_w = SPACE_LEN * (len(self.tokens) - 1)
-
-    
 
     # picture dimensions 
     tot_w = tokens_w + spaces_w
@@ -185,8 +185,11 @@ class VisualStanza:
     for (i,token) in enumerate(self.tokens):
       x = self.token_xpos(i)
       y = tot_h - 5
-      svg.append(Text(token["form"], NORMAL_TXT_SIZE, x=x, y=y, fill=color))
-      svg.append(Text(token["pos"], TINY_TXT_SIZE, x=x, y=tot_h-20, fill=color))
+      if "FORM" in fields:
+        svg.append(Text(token["FORM"], NORMAL_TXT_SIZE, x=x, y=y, fill=color))
+      if "UPOS" in fields:
+        svg.append(
+          Text(token["UPOS"], TINY_TXT_SIZE, x=x, y=tot_h-20, fill=color))
 
     # draw deprels (arcs + labels)
     for ((src,trg),label) in self.deprels:
@@ -208,7 +211,8 @@ class VisualStanza:
       # draw arc
       arc_path = Path(stroke=color, fill='none')
       arc_path.M(x1, y1).Q(x1, y2, x2, y2).L(x3,y2).Q(x4, y2, x4, y1)
-      svg.append(arc_path)
+      if "HEAD" in fields:
+        svg.append(arc_path)
 
       # draw arrow
       x_arr = x + (w / 2) if trg < src else x - (w / 2)
@@ -218,12 +222,14 @@ class VisualStanza:
         x_arr - 3, y_arr - 6, 
         x_arr + 3, y_arr - 6, 
         stroke=color, fill=color, close="true")
-      svg.append(arrow)
+      if "HEAD" in fields:
+        svg.append(arrow)
 
       # draw label
       x_lab = x - (len(label) * 4.5 / 2)
       y_lab = ycorrect((h / 2) + ARC_BASE_YPOS + 3)
-      svg.append(Text(label, TINY_TXT_SIZE, x=x_lab, y=y_lab, fill=color))
+      if "DEPREL" in fields:
+        svg.append(Text(label, TINY_TXT_SIZE, x=x_lab, y=y_lab, fill=color))
 
     # draw root arrow & text
     x_root_line = self.token_xpos(self.root) + 15
@@ -233,23 +239,30 @@ class VisualStanza:
       x_root_line, y_root_line, 
       x_root_line, y_root_line + root_len, 
       stroke=color)
-    svg.append(root_line)
-    arrow_endpoint = y_root_line + root_len
-    root_arrow = Lines(
-      x_root_line, arrow_endpoint, 
-      x_root_line - 3, arrow_endpoint - 6, 
-      x_root_line + 3, arrow_endpoint - 6, 
-      stroke=color, fill=color, close="true")
-    svg.append(root_arrow)
-    svg.append(Text(
-      "root", 
-      TINY_TXT_SIZE, 
-      x=x_root_line + 5, y=ycorrect(tot_h - 15)))
+    if "HEAD" in fields:
+      svg.append(root_line)
+      arrow_endpoint = y_root_line + root_len
+      root_arrow = Lines(
+        x_root_line, arrow_endpoint, 
+        x_root_line - 3, arrow_endpoint - 6, 
+        x_root_line + 3, arrow_endpoint - 6, 
+        stroke=color, fill=color, close="true")
+      svg.append(root_arrow)
+    if "DEPREL" in fields:
+      svg.append(Text(
+        "root", 
+        TINY_TXT_SIZE, 
+        x=x_root_line + 5, y=ycorrect(tot_h - 15)))
 
     return svg
 
 
-def conll2svg(intxt: str, color: str="white", meta: list=[]) -> Iterable[str]:
+def conll2svg(
+  intxt: str, 
+  color: str="white", 
+  meta: list=[], 
+  fields: list=DEFAULT_FIELDS
+) -> Iterable[str]:
 
     stanzas = [span for span in intxt.split("\n\n") if span.strip()]
   
@@ -261,7 +274,7 @@ def conll2svg(intxt: str, color: str="white", meta: list=[]) -> Iterable[str]:
             yield "<h4><b>{}</b>: {}</h4>".format(item, vstanza.metadict[item])
         yield '<div>'
         try:
-          svg = vstanza.to_svg(color=color)
+          svg = vstanza.to_svg(color=color, fields=fields)
           yield svg.as_svg()
         except:
           yield "This tree cannot be visualized; check the format!"
@@ -277,14 +290,23 @@ if __name__ == "__main__":
       default="white"
     )
     parser.add_argument(
-      '--meta', 
-      '-m', 
+      '--meta', '-m', 
       help='list of metadata items to be displayed, if available', 
       nargs='+', 
       default=[]
     )
+    parser.add_argument(
+      "--fields", "-f",
+      help="list of CoNLL-U fields to be displayed",
+      nargs="+",
+      default=DEFAULT_FIELDS
+    )
     args = parser.parse_args()
 
     intxt = sys.stdin.read()
-    for line in conll2svg(intxt, color=args.color, meta=args.meta):
+    for line in conll2svg(
+                  intxt, 
+                  color=args.color, 
+                  meta=args.meta,
+                  fields=[field.upper() for field in args.fields]):
         print(line)
