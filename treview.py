@@ -44,7 +44,7 @@ class WordLine:
 
 STD_FIELDS = set('ID FORM LEMMA UPOS XPOS FEATS HEAD DEPREL DEPS MISC'.split())
 DEFAULT_FIELDS = ["FORM", "UPOS", "HEAD", "DEPREL"]
-SUPPORTED_FIELDS = DEFAULT_FIELDS + []
+SUPPORTED_FIELDS = DEFAULT_FIELDS + ["ID", "LEMMA"]
 
 ROOT_LABEL = 'root'
 
@@ -100,9 +100,10 @@ SPACE_LEN = 15
 DEFAULT_WORD_LEN = 20
 CHAR_LEN = 1.8
 NORMAL_TXT_SIZE = 16
+SMALL_TXT_SIZE = 12
 TINY_TXT_SIZE = 10
 SCALE = 5
-ARC_BASE_YPOS = 30
+ARC_BASE_YPOS = 50
 
 class VisualStanza:
   """class to visualize a CoNNL-U stanza; partly corresponding to Dep in the
@@ -121,8 +122,13 @@ class VisualStanza:
       else:
         pass
 
-    # token-wise info to be visualized (form + pos), cf. Dep's tokens
-    self.tokens = [({"FORM": wl.FORM, "UPOS": wl.POS}) for wl in wordlines] 
+    # token-wise info to be visualized
+    self.tokens = [({
+      "ID": wl.ID,
+      "FORM": wl.FORM,
+      "LEMMA": wl.LEMMA,
+      "UPOS": wl.POS
+      }) for wl in wordlines] 
       
     # list of dependency relations: [((from,to), label)], cf. Dep's deps
     self.deprels = [
@@ -174,7 +180,7 @@ class VisualStanza:
 
     # picture dimensions 
     tot_w = tokens_w + spaces_w
-    tot_h = 55 + 20 * max([0] + [self.arc_height(src,trg) 
+    tot_h = 55 + 40 * max([0] + [self.arc_height(src,trg) 
                                  for (src,trg) in self.arcs()])
     
     # otherwise everything will be mirrored
@@ -184,12 +190,23 @@ class VisualStanza:
     # draw tokens (forms + pos tags)
     for (i,token) in enumerate(self.tokens):
       x = self.token_xpos(i)
-      y = tot_h - 5
       if "FORM" in fields:
-        svg.append(Text(token["FORM"], NORMAL_TXT_SIZE, x=x, y=y, fill=color))
+        svg.append(
+          Text(token["FORM"], NORMAL_TXT_SIZE, x=x, y=tot_h-25, fill=color))
       if "UPOS" in fields:
         svg.append(
-          Text(token["UPOS"], TINY_TXT_SIZE, x=x, y=tot_h-20, fill=color))
+          Text(token["UPOS"], TINY_TXT_SIZE, x=x, y=tot_h-40, fill=color))
+      if "LEMMA" in fields:
+        svg.append(
+          Text(token["LEMMA"], 
+          SMALL_TXT_SIZE, 
+          x=x, y=tot_h-13, fill=color, font_style='italic'))
+      if "ID" in fields:
+        svg.append(
+          Text(token["ID"], 
+          SMALL_TXT_SIZE, 
+          x=x, y=tot_h, fill=color, font_weight='bold'))
+
 
     # draw deprels (arcs + labels)
     for ((src,trg),label) in self.deprels:
@@ -285,9 +302,10 @@ def conll2svg(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A CoNLL-U to HTML converter")
     parser.add_argument(
-      '--color', '-c', 
-      help='HTML color code for stroke + fill', 
-      default="white"
+      "--fields", "-f",
+      help="list of CoNLL-U fields to be displayed",
+      nargs="+",
+      default=DEFAULT_FIELDS
     )
     parser.add_argument(
       '--meta', '-m', 
@@ -296,17 +314,32 @@ if __name__ == "__main__":
       default=[]
     )
     parser.add_argument(
-      "--fields", "-f",
-      help="list of CoNLL-U fields to be displayed",
-      nargs="+",
-      default=DEFAULT_FIELDS
+      '--color', '-c', 
+      help='HTML color code for stroke + fill', 
+      default="white"
     )
     args = parser.parse_args()
 
     intxt = sys.stdin.read()
+
+    fields = []
+    for field in args.fields:
+      field = field.upper()
+      if field in STD_FIELDS:
+        if field in SUPPORTED_FIELDS:
+          fields.append(field)
+        else:
+          sys.stderr.write("Ignoring {} (field not supported)\n".format(
+          field
+          ))
+      else:
+        sys.stderr.write("Ignoring {} (not a standard CoNLL-U field)\n".format(
+          field
+        ))
+
     for line in conll2svg(
                   intxt, 
                   color=args.color, 
                   meta=args.meta,
-                  fields=[field.upper() for field in args.fields]):
+                  fields=fields):
         print(line)
