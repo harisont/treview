@@ -19,7 +19,7 @@ class WordLine:
     ID: str
     FORM: str
     LEMMA: str
-    POS: str
+    UPOS: str
     XPOS: str
     FEATS: str
     HEAD: str
@@ -127,7 +127,7 @@ class VisualStanza:
       "ID": wl.ID,
       "FORM": wl.FORM,
       "LEMMA": wl.LEMMA,
-      "UPOS": wl.POS
+      "UPOS": wl.UPOS
       }) for wl in wordlines] 
       
     # list of dependency relations: [((from,to), label)], cf. Dep's deps
