@@ -277,7 +277,7 @@ class VisualStanza:
       svg.append(Text(
         "root", 
         TINY_TXT_SIZE, 
-        x=x_root_line + 5, y=ycorrect(tot_h - 15)))
+        x=x_root_line + 5, y=ycorrect(tot_h - 15), fill=color))
 
     return svg
 
