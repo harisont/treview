@@ -139,6 +139,7 @@ class VisualStanza:
 
     # root position, cf. Dep's root
     self.root = int([wl.ID for wl in wordlines if wl.HEAD == "0"][0]) - 1
+    self.root_label = [wl.DEPREL for wl in wordlines if wl.HEAD == "0"][0]
   
   def token_width(self, i):
     """total i-th token width (including space) in the output SVG"""
@@ -275,7 +276,7 @@ class VisualStanza:
       svg.append(root_arrow)
     if "DEPREL" in self.fields:
       svg.append(Text(
-        "root", 
+        self.root_label, 
         TINY_TXT_SIZE, 
         x=x_root_line + 5, y=ycorrect(tot_h - 15), fill=color))
 
