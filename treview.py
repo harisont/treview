@@ -183,8 +183,8 @@ class VisualStanza:
     tokens_w = sum([self.token_width(i) for i in range(len(self.tokens))])
 
     # picture dimensions 
-    tot_w = tokens_w - SPACE_LEN # subtract space after last token
-    tot_h = 55 + 40 * max([0] + [self.arc_height(src,trg) 
+    tot_w = tokens_w
+    tot_h = 55 + 30 * max([1] + [self.arc_height(src,trg) 
                                  for (src,trg) in self.arcs()])
     
     # otherwise everything will be mirrored
