@@ -1,6 +1,6 @@
 # Treview
 
-Treview is a command-line CoNLL-U to HTML converter.
+Treview is a command-line CoNLL-U to HTML-embedded SVG converter.
 It resues code from [deptreepy](https://github.com/aarneranta/deptreepy/), with minor modifications tailored to use inside Visual Studio Code/Codium as a CoNLL-U live previewer.
 
 ![Live treview in VSCodium](treview.gif)
@@ -43,6 +43,7 @@ You can now preview open CoNLL-U files by opening the command palette (Ctrl + Sh
 - `--fields` or `f` can be followed by a space-separated list of CoNLL-U fields to be displayed. By default, treview displays FORM, UPOS and dependencies (HEAD + DEPREL). Supported fields: ID, FORM, LEMMA, UPOS, XPOS, HEAD (dependency edges) and DEPRELs
 - `--meta` or `m` can be followed by a space-separated list of metadata items to be displayed (if available). By default, no metadata is shown
 - `--color` or `-c` can be used to specify the HTML color code to be used for the stroke and fill of the output SVG. The default is `white`, as many programmers use dark themes
+- `--snippets` or `-s` makes treview only produce SVG snippets without wrapping them in an HTML file, ignoring metadata
 
 For instance, the command I currently use for annotation in VSCodium `documentPreview.converters` is
 

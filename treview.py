@@ -282,30 +282,34 @@ class VisualStanza:
 
     return svg
 
-
 def conll2svg(
   intxt: str, 
   color: str="white", 
   meta: list=[], 
-  fields: list=DEFAULT_FIELDS
+  fields: list=DEFAULT_FIELDS,
+  html_wrap: bool=False
 ) -> Iterable[str]:
 
   stanzas = [span for span in intxt.split("\n\n") if span.strip()]
   
-  yield "<html>\n<body>\n"
-  for stanza in stanzas:
+  if html_wrap: yield "<html>\n<body>\n"
+  for (i,stanza) in enumerate(stanzas):
     vstanza = VisualStanza(stanza, fields=fields)
     for item in meta:
       if item in vstanza.metadict:
-        yield "<h4><b>{}</b>: {}</h4>".format(item, vstanza.metadict[item])
-    yield "<div>"
+        if html_wrap:
+          yield "<h4><b>{}</b>: {}</h4>".format(item, vstanza.metadict[item])
+    if html_wrap: yield "<div>"
     try:
       svg = vstanza.to_svg(color=color)
       yield svg.as_svg()
     except:
-      yield "This tree cannot be visualized; check the format!"
-    yield "</div>"
-  yield "</body>\n</html>"
+      if html_wrap: yield "This tree cannot be visualized; check the format!"
+      sys.stderr.write(
+        "Tree {} cannot be visualized; check the format!\n".format(i)
+        )
+    yield "</div>" if html_wrap else "\n"
+  if html_wrap: yield "</body>\n</html>"
 
 
 if __name__ == "__main__":
@@ -327,6 +331,12 @@ if __name__ == "__main__":
     help="HTML color code for stroke + fill", 
     default="white"
   )
+  parser.add_argument(
+    "--snippets", "-s",
+    help="only produce SVG snippets, without wrapping them in an HTML file",
+    default=False,
+    action="store_true"
+  )
   args = parser.parse_args()
 
   intxt = sys.stdin.read()
@@ -345,10 +355,12 @@ if __name__ == "__main__":
       sys.stderr.write("Ignoring {} (not a standard CoNLL-U field)\n".format(
         field
       ))
-
+  if args.snippets and args.meta:
+    sys.stderr.write("Ignoring metadata (can't display in SVG snippets)\n")
   for line in conll2svg(
                 intxt, 
                 color=args.color, 
                 meta=args.meta,
-                fields=fields):
+                fields=fields,
+                html_wrap=not args.snippets):
     print(line)
