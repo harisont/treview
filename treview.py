@@ -181,10 +181,9 @@ class VisualStanza:
   def to_svg(self, color="white"):
     """generate svg tree code"""
     tokens_w = sum([self.token_width(i) for i in range(len(self.tokens))])
-    spaces_w = SPACE_LEN * (len(self.tokens) - 1)
 
     # picture dimensions 
-    tot_w = tokens_w + spaces_w
+    tot_w = tokens_w - SPACE_LEN # subtract space after last token
     tot_h = 55 + 40 * max([0] + [self.arc_height(src,trg) 
                                  for (src,trg) in self.arcs()])
     
