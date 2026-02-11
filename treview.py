@@ -241,7 +241,7 @@ class VisualStanza:
 
       # draw arrow
       x_arr = x + (w / 2) if trg < src else x - (w / 2)
-      y_arr = ycorrect(y - 5)
+      y_arr = ycorrect(y)
       arrow = Lines(
         x_arr, y_arr, 
         x_arr - 3, y_arr - 6, 
