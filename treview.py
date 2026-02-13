@@ -204,8 +204,20 @@ class VisualStanza:
         svg.append(
           Text(pos, TINY_TXT_SIZE, x=x, y=tot_h-40, fill=color))
       if "FORM" in self.fields:
+        form = token["FORM"]
+        bold = False
+        if form.startswith("*") and token["FORM"].endswith("*"): 
+          form = form.replace("*", "")
+          bold = True
         svg.append(
-          Text(token["FORM"], NORMAL_TXT_SIZE, x=x, y=tot_h-25, fill=color))
+          Text(
+            form, 
+            NORMAL_TXT_SIZE, 
+            x=x, y=tot_h-25, 
+            fill=color, 
+            font_weight="bold" if bold else "normal"
+            )
+          )
       if "LEMMA" in self.fields:
         svg.append(
           Text(token["LEMMA"], 
