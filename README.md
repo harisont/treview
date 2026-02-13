@@ -5,6 +5,7 @@ It resues code from [deptreepy](https://github.com/aarneranta/deptreepy/), with 
 
 ![Live treview in VSCodium](treview.gif)
 
+
 ## Basic usage
 
 Using treview from the command line is simple:
@@ -43,13 +44,24 @@ You can now preview open CoNLL-U files by opening the command palette (Ctrl + Sh
 - `--fields` or `f` can be followed by a space-separated list of CoNLL-U fields to be displayed. By default, treview displays FORM, UPOS and dependencies (HEAD + DEPREL). Supported fields: ID, FORM, LEMMA, UPOS, XPOS, HEAD (dependency edges) and DEPRELs
 - `--meta` or `m` can be followed by a space-separated list of metadata items to be displayed (if available). By default, no metadata is shown
 - `--color` or `-c` can be used to specify the HTML color code to be used for the stroke and fill of the output SVG. The default is `white`, as many programmers use dark themes
-- `--snippets` or `-s` makes treview only produce SVG snippets without wrapping them in an HTML file, ignoring metadata
+- `--snippets` or `-s` makes treview only produce SVG snippets without wrapping them in an HTML file, ignoring metadata. This is useful when treview is run on individual sentences to produce figures for a paper or similar, rather than used as a live previewer. 
 
 For instance, the command I currently use for annotation in VSCodium `documentPreview.converters` is
 
 ```
 treview --meta sent_id --fields id form lemma upos head deprel
 ```
+
+## Quirks
+Some treview features have been/will be implemented with oddly specific use cases in mind:
+
+- if you wrap certain values in asterisks (like \*this\* or \*\*this\*\*), it will be highlighted in **bold**. This applies to:
+  - FORM
+  - LEMMA
+  - POS (UPOS and XPOS are merged into a single SVG elements, so if you wrap either, both will be highlighted)
+  - DEPREL
+
+I hope they won't bother any other users too much.
 
 ## Planned features
 - [x] display lemmas and, optionally, (all) other remaining fields (__NOTE__: at least for the moment, I decided not to implement visualizations for FEATS, MISC and DEPREL; see above)
