@@ -190,6 +190,14 @@ class VisualStanza:
     # otherwise everything will be mirrored
     ycorrect = lambda y: (round(tot_h)) - round(y) - 5
     svg = Drawing(tot_w,tot_h, origin=(0,0))
+
+    def highlight(val: str) -> tuple(str,bool):
+      '''check if the value of a certain field should be *highlighted* or not'''
+      bold = False
+      if val.startswith("*") and val.endswith("*"): 
+        val = val.replace("*", "")
+        bold = True
+      return (val,bold)
     
     # draw tokens (forms + pos tags)
     for (i,token) in enumerate(self.tokens):
@@ -204,11 +212,7 @@ class VisualStanza:
         svg.append(
           Text(pos, TINY_TXT_SIZE, x=x, y=tot_h-40, fill=color))
       if "FORM" in self.fields:
-        form = token["FORM"]
-        bold = False
-        if form.startswith("*") and token["FORM"].endswith("*"): 
-          form = form.replace("*", "")
-          bold = True
+        (form,bold) = highlight(token["FORM"])
         svg.append(
           Text(
             form, 
