@@ -190,32 +190,58 @@ class VisualStanza:
     # otherwise everything will be mirrored
     ycorrect = lambda y: (round(tot_h)) - round(y) - 5
     svg = Drawing(tot_w,tot_h, origin=(0,0))
+
+    def highlighted(txt: str):
+      return txt.startswith("*") and txt.endswith("*")
+
+    def mkText(
+      txt: str, 
+      size: int, 
+      x: float, y: float, 
+      color: str="black",
+      style="normal") -> Text:
+      
+        bold = False
+        if highlighted(txt): 
+          txt = txt.replace("*", "")
+          bold = True
+      
+        return Text(
+          txt, 
+          size, 
+          x=x, y=y, 
+          fill=color, 
+          font_style=style, font_weight="bold" if bold else "normal"
+        )
     
     # draw tokens (forms + pos tags)
     for (i,token) in enumerate(self.tokens):
       x = self.token_xpos(i)
+      upos = token["UPOS"]
+      xpos = token["XPOS"]
       pos = " - ".join(
         [pos for pos in [
-          token["UPOS"] if "UPOS" in self.fields else None, 
-          token["XPOS"] if "XPOS" in self.fields else None] 
+          upos if "UPOS" in self.fields else None, 
+          xpos if "XPOS" in self.fields else None] 
         if pos]
       )
+      if highlighted(upos) or highlighted(xpos):
+        # if either is highlighted, remove *s and higlight POS as a whole
+        pos.replace("*", "")
+        pos = "*{}*".format(pos)
+      form = token["FORM"]
+      lemma = token["LEMMA"]
+      id = token["ID"]
+
       if "UPOS" in self.fields or "XPOS" in self.fields:
-        svg.append(
-          Text(pos, TINY_TXT_SIZE, x=x, y=tot_h-40, fill=color))
+        svg.append(mkText(pos, TINY_TXT_SIZE, x, tot_h-40, color=color))
       if "FORM" in self.fields:
-        svg.append(
-          Text(token["FORM"], NORMAL_TXT_SIZE, x=x, y=tot_h-25, fill=color))
+        svg.append(mkText(form, NORMAL_TXT_SIZE, x, tot_h-25, color=color))
       if "LEMMA" in self.fields:
-        svg.append(
-          Text(token["LEMMA"], 
-          SMALL_TXT_SIZE, 
-          x=x, y=tot_h-13, fill=color, font_style="italic"))
+        svg.append(mkText(
+          lemma, SMALL_TXT_SIZE, x, tot_h-13, color=color, style="italic"))
       if "ID" in self.fields:
-        svg.append(
-          Text(token["ID"], 
-          SMALL_TXT_SIZE, 
-          x=x, y=tot_h, fill=color, font_weight="bold"))
+        svg.append(mkText(id, SMALL_TXT_SIZE, x, tot_h, color=color))
 
     # draw deprels (arcs + labels)
     for ((src,trg),label) in self.deprels:   
@@ -254,7 +280,7 @@ class VisualStanza:
       x_lab = x - (len(label) * 4.5 / 2)
       y_lab = ycorrect((h / 2) + ARC_BASE_YPOS + 3)
       if "DEPREL" in self.fields:
-        svg.append(Text(label, TINY_TXT_SIZE, x=x_lab, y=y_lab, fill=color))
+        svg.append(mkText(label, TINY_TXT_SIZE, x_lab, y_lab, color=color))
 
     # draw root arrow & text
     x_root_line = self.token_xpos(self.root) + 15
@@ -302,8 +328,8 @@ def conll2svg(
     try:
       svg = vstanza.to_svg(color=color)
       yield svg.as_svg()
-    except:
-      if html_wrap: yield "This tree cannot be visualized; check the format!"
+    except Exception as e:
+      if html_wrap: yield "This tree cannot be visualized; check the format!" + str(e)
       sys.stderr.write(
         "Tree {} cannot be visualized; check the format!\n".format(i)
         )
