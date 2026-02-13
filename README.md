@@ -52,8 +52,17 @@ For instance, the command I currently use for annotation in VSCodium `documentPr
 treview --meta sent_id --fields id form lemma upos head deprel
 ```
 
-## Quirks
-Some treview features have been/will be implemented with oddly specific use cases in mind:
+## Known issues
+In VSCod*, treview currently only works for small files because the Document Preview extension has a hardcoded 500 ms time limit for the conversion to HTML.
+
+## Planned features
+- [x] display lemmas and, optionally, (all) other remaining fields (__NOTE__: at least for the moment, I decided not to implement visualizations for FEATS, MISC and DEPREL; see above)
+- [ ] incorporate validation log, at least level 1 for sentences too broken to be visualized
+- [x] show sentence ID (and maybe optionally other metadata?)
+- [ ] diff with another file (assumed to be with the same data but possibly different annotations) 
+
+## Unplanned features
+Some treview features have been implemented on the go for some oddly specific use cases in mind:
 
 - if you wrap certain values in asterisks (like \*this\* or \*\*this\*\*), it will be highlighted in **bold**. This applies to:
   - FORM
@@ -62,14 +71,5 @@ Some treview features have been/will be implemented with oddly specific use case
   - DEPREL
 
 I hope they won't bother any other users too much.
-
-## Planned features
-- [x] display lemmas and, optionally, (all) other remaining fields (__NOTE__: at least for the moment, I decided not to implement visualizations for FEATS, MISC and DEPREL; see above)
-- [ ] incorporate validation log, at least level 1 for sentences too broken to be visualized
-- [x] show sentence ID (and maybe optionally other metadata?)
-- [ ] diff with another file (assumed to be with the same data but possibly different annotations)
-
-## Known issues
-In VSCod*, treview currently only works for small files because the Document Preview extension has a hardcoded 500 ms time limit for the conversion to HTML. 
 
 [^1]: To learn how to do that, see [this discussion thread](https://stackoverflow.com/questions/29973619/how-to-associate-a-file-extension-with-a-certain-language-in-vs-code/51228725#51228725).
