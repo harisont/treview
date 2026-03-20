@@ -300,10 +300,11 @@ class VisualStanza:
         stroke=color, fill=color, close="true")
       svg.append(root_arrow)
     if "DEPREL" in self.fields:
-      svg.append(Text(
+      svg.append(mkText(
         self.root_label, 
         TINY_TXT_SIZE, 
-        x=x_root_line + 5, y=ycorrect(tot_h - 15), fill=color))
+        x_root_line + 5, ycorrect(tot_h - 15), 
+        color=color))
 
     return svg
 
